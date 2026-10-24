@@ -1,5 +1,8 @@
 live link 
+
 https://gym-fee-tracker-eu5p.onrender.com
+
+signup code for new user "gokul-gym-2026"
 
 # Gym tracker — Fee Tracker (Django)
 
