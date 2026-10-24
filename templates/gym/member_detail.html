@@ -1,0 +1,71 @@
+{% extends "gym/base.html" %}
+{% block title %}{{ member.name }}{% endblock %}
+{% block content %}
+<div class="topbar">
+  <div class="d-flex align-items-center gap-3">
+    {% if member.photo %}<img class="avatar lg" src="{{ member.photo.url }}" alt="">{% else %}<span class="avatar lg">{{ member.initials }}</span>{% endif %}
+    <div><h1>{{ member.name }}</h1>
+      <p>{{ member.member_id }} · {{ member.plan.name|default:"No plan" }} · <span class="badge-x badge-{{ member.fee_class }}">{{ member.fee_label }}</span></p></div>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <form method="post" action="{% url 'gym:send_reminder' member.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{% url 'gym:member_detail' member.pk %}">
+      <button class="btn btn-ghost" type="submit"><i class="bi bi-chat-dots"></i> Send reminder</button></form>
+    <a class="btn btn-ghost" href="{% url 'gym:member_edit' member.pk %}"><i class="bi bi-pencil"></i> Edit</a>
+    <a class="btn btn-accent" href="{% url 'gym:payment_create' %}?member={{ member.pk }}"><i class="bi bi-cash-coin"></i> Collect fee</a>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="panel mb-3">
+      <div class="panel-head"><h2>Details</h2></div>
+      <dl class="kv">
+        <dt>Phone</dt><dd>{{ member.phone }}</dd>
+        <dt>Email</dt><dd>{{ member.email|default:"—" }}</dd>
+        <dt>Gender</dt><dd>{{ member.get_gender_display|default:"—" }}</dd>
+        <dt>Date of birth</dt><dd>{{ member.date_of_birth|date:"d M Y"|default:"—" }}</dd>
+        <dt>Joined</dt><dd>{{ member.join_date|date:"d M Y" }}</dd>
+        <dt>Next due</dt><dd>{{ member.next_due_date|date:"d M Y"|default:"—" }}</dd>
+        <dt>Status</dt><dd>{{ member.get_status_display }}</dd>
+        <dt>Total paid</dt><dd class="money">{{ CURRENCY }}{{ total_paid|floatformat:"0" }}</dd>
+        <dt>Visits this month</dt><dd>{{ visits_this_month }}</dd>
+        {% if member.address %}<dt>Address</dt><dd>{{ member.address }}</dd>{% endif %}
+        {% if member.notes %}<dt>Notes</dt><dd>{{ member.notes }}</dd>{% endif %}
+      </dl>
+    </div>
+    <div class="panel mb-3 text-center">
+      <div class="panel-head"><h2>Check-in QR</h2><a class="small" href="{% url 'gym:member_card' member.pk %}">Print ID card</a></div>
+      <img src="{% url 'gym:member_qr' member.pk %}" alt="QR code for {{ member.name }}" width="190" height="190">
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Mobile app login</h2></div>
+      <p class="small text-secondary mb-2">{% if member.user %}Username <strong>{{ member.user.username }}</strong>.{% else %}No app login yet.{% endif %}</p>
+      <form method="post" action="{% url 'gym:member_app_login' member.pk %}">{% csrf_token %}
+        <button class="btn btn-sm btn-ghost" type="submit">{% if member.user %}Reset password{% else %}Create app login{% endif %}</button></form>
+    </div>
+  </div>
+  <div class="col-lg-8">
+    <div class="panel mb-3">
+      <div class="panel-head"><h2>Payment history</h2></div>
+      <div class="scroll-x"><table class="table-x">
+        <thead><tr><th>Receipt</th><th>Paid on</th><th>Covers</th><th>Method</th><th class="text-end">Amount</th></tr></thead>
+        <tbody>{% for p in payments %}
+          <tr><td><a href="{% url 'gym:receipt' p.pk %}">{{ p.receipt_no }}</a></td><td>{{ p.paid_on|date:"d M Y" }}</td>
+            <td>{{ p.period_start|date:"d M" }} – {{ p.period_end|date:"d M Y" }}</td><td>{{ p.get_method_display }}</td>
+            <td class="text-end money">{{ CURRENCY }}{{ p.amount|floatformat:"0" }}</td></tr>
+        {% empty %}<tr><td colspan="5" class="empty">No payments yet. Use “Collect fee” to record the first one.</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Recent attendance</h2></div>
+      <div class="scroll-x"><table class="table-x">
+        <thead><tr><th>Date</th><th>Time</th><th>How</th></tr></thead>
+        <tbody>{% for a in attendance %}
+          <tr><td>{{ a.date|date:"D, d M Y" }}</td><td>{{ a.check_in|time:"h:i A" }}</td><td>{{ a.get_method_display }}</td></tr>
+        {% empty %}<tr><td colspan="3" class="empty">No visits recorded yet.</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div>
+    <div class="mt-3 text-end"><a class="small text-danger" href="{% url 'gym:member_delete' member.pk %}">Delete this member</a></div>
+  </div>
+</div>
+{% endblock %}

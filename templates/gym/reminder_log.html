@@ -1,0 +1,18 @@
+{% extends "gym/base.html" %}
+{% block title %}Reminders{% endblock %}
+{% block content %}
+<div class="topbar">
+  <div><h1>Reminder log</h1><p>Channels: <strong>{{ channels }}</strong> · {{ pending_count }} member{{ pending_count|pluralize }} currently due or overdue</p></div>
+  <form method="post" action="{% url 'gym:send_all_reminders' %}" class="d-flex gap-2">{% csrf_token %}
+    <button class="btn btn-ghost" name="force" value="1" type="submit">Send to everyone again</button>
+    <button class="btn btn-accent" type="submit"><i class="bi bi-send"></i> Send reminders now</button></form>
+</div>
+<div class="panel"><div class="scroll-x"><table class="table-x">
+  <thead><tr><th>When</th><th>Member</th><th>Channel</th><th>Message</th><th>Result</th></tr></thead>
+  <tbody>{% for r in page %}
+    <tr><td class="text-nowrap">{{ r.sent_at|date:"d M, h:i A" }}</td><td>{{ r.member.name }}</td><td>{{ r.get_channel_display }}</td>
+      <td style="max-width:420px"><small>{{ r.message }}</small></td>
+      <td>{% if r.success %}<span class="badge-x badge-ok">Sent</span>{% else %}<span class="badge-x badge-danger" title="{{ r.error }}">Failed</span><br><small class="text-danger">{{ r.error }}</small>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="5" class="empty">No reminders sent yet.</td></tr>{% endfor %}</tbody>
+</table></div>{% include "gym/_pager.html" %}</div>
+{% endblock %}

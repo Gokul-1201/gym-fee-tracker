@@ -1,0 +1,29 @@
+{% extends "gym/base.html" %}
+{% block title %}Payments{% endblock %}
+{% block content %}
+<div class="topbar">
+  <div><h1>Payment history</h1><p>{{ page.paginator.count }} payment{{ page.paginator.count|pluralize }} · {{ CURRENCY }}{{ total|floatformat:"0" }} in this view</p></div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-ghost" href="{% url 'gym:export_payments' %}"><i class="bi bi-download"></i> Export CSV</a>
+    <a class="btn btn-accent" href="{% url 'gym:payment_create' %}"><i class="bi bi-plus-lg"></i> Record payment</a>
+  </div>
+</div>
+<div class="panel">
+  <form class="d-flex gap-2 flex-wrap mb-3" method="get">
+    <input class="form-control" style="max-width:300px" name="q" value="{{ q }}" placeholder="Search member or receipt">
+    <input class="form-control" style="max-width:190px" type="month" name="month" value="{{ month }}" aria-label="Month">
+    <button class="btn btn-ghost" type="submit">Filter</button>
+    {% if q or month %}<a class="btn btn-ghost" href="{% url 'gym:payment_list' %}">Clear</a>{% endif %}
+  </form>
+  <div class="scroll-x"><table class="table-x">
+    <thead><tr><th>Receipt</th><th>Member</th><th>Paid on</th><th>Covers</th><th>Method</th><th class="text-end">Amount</th></tr></thead>
+    <tbody>{% for p in page %}
+      <tr><td><a href="{% url 'gym:receipt' p.pk %}">{{ p.receipt_no }}</a></td>
+        <td><a class="text-decoration-none" href="{% url 'gym:member_detail' p.member.pk %}">{{ p.member.name }}</a></td>
+        <td>{{ p.paid_on|date:"d M Y" }}</td><td>{{ p.period_start|date:"d M" }} – {{ p.period_end|date:"d M Y" }}</td>
+        <td>{{ p.get_method_display }}</td><td class="text-end money">{{ CURRENCY }}{{ p.amount|floatformat:"0" }}</td></tr>
+    {% empty %}<tr><td colspan="6" class="empty">No payments found for this filter.</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% include "gym/_pager.html" %}
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "gym/base.html" %}
+{% block title %}QR check-in{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>QR check-in</h1><p>Point the camera at a member's QR code. A USB scanner works too — click the box below and scan.</p></div></div>
+<div class="panel text-center">
+  <div id="reader"></div>
+  <div id="cam-note" class="small text-secondary mt-2">Camera access needs HTTPS or localhost.</div>
+  <div class="mx-auto mt-3" style="max-width:440px">
+    <input id="manual" class="form-control text-center" placeholder="Scanner input appears here" autocomplete="off">
+  </div>
+  <div id="result" class="scan-result d-none mx-auto" style="max-width:440px" role="status" aria-live="polite"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script>
+  const csrf = "{{ csrf_token }}";
+  const box = document.getElementById("result");
+  let lastToken = "", lastAt = 0;
+
+  async function checkIn(token) {
+    token = token.trim();
+    if (!token || (token === lastToken && Date.now() - lastAt < 4000)) return;
+    lastToken = token; lastAt = Date.now();
+    try {
+      const res = await fetch("{% url 'gym:scan' %}", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": csrf }, body: JSON.stringify({ token }) });
+      const data = await res.json();
+      box.className = "scan-result mx-auto " + data.level;
+      box.textContent = data.message + (data.fee ? "  ·  " + data.fee : "");
+    } catch (e) {
+      box.className = "scan-result mx-auto error"; box.textContent = "Could not reach the server. Try again.";
+    }
+    box.style.maxWidth = "440px";
+  }
+
+  document.getElementById("manual").addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); checkIn(e.target.value); e.target.value = ""; }
+  });
+
+  if (window.Html5QrcodeScanner) {
+    const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 240 }, false);
+    scanner.render(text => checkIn(text), () => {});
+  } else {
+    document.getElementById("cam-note").textContent = "Camera scanner could not load. Use a USB scanner or type the code above.";
+  }
+</script>
+{% endblock %}

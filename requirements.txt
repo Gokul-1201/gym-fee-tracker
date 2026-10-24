@@ -1,0 +1,11 @@
+Django>=4.2,<6.0
+djangorestframework>=3.15
+Pillow>=10.0
+qrcode>=7.4
+python-dateutil>=2.9
+APScheduler>=3.10        # optional: in-process daily reminder scheduler
+twilio>=9.0              # optional: real SMS / WhatsApp sending
+gunicorn
+whitenoise
+dj-database-url
+psycopg[binary]

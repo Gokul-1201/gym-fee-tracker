@@ -1,0 +1,36 @@
+{% extends "gym/base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="topbar">
+  <div><h1>Reports</h1><p>{{ start|date:"F Y" }}</p></div>
+  <form class="d-flex gap-2" method="get"><input class="form-control" type="month" name="month" value="{{ month_value }}" aria-label="Month"><button class="btn btn-ghost" type="submit">Show</button></form>
+</div>
+<section class="band mb-4">
+  <div><div class="num">{{ CURRENCY }}{{ revenue|floatformat:"0" }}</div><div class="lbl">Revenue · {{ payment_count }} payment{{ payment_count|pluralize }}</div></div>
+  <div><div class="num">{{ new_members }}</div><div class="lbl">New members</div></div>
+  <div><div class="num">{{ visits }}</div><div class="lbl">Total visits</div></div>
+</section>
+<div class="row g-3">
+  <div class="col-lg-7"><div class="panel h-100"><div class="panel-head"><h2>Revenue, last 12 months</h2></div><div class="chart-box"><canvas id="yearChart"></canvas></div></div></div>
+  <div class="col-lg-5"><div class="panel h-100"><div class="panel-head"><h2>Collected by method</h2></div>
+    {% for r in by_method %}<div class="d-flex justify-content-between py-2 border-bottom"><span>{{ r.label }} <small class="text-secondary">· {{ r.n }}</small></span><span class="money">{{ CURRENCY }}{{ r.total|floatformat:"0" }}</span></div>
+    {% empty %}<div class="empty">No payments this month.</div>{% endfor %}</div></div>
+  <div class="col-lg-7"><div class="panel h-100"><div class="panel-head"><h2>Visits per day</h2></div><div class="chart-box"><canvas id="dayChart"></canvas></div></div></div>
+  <div class="col-lg-5"><div class="panel h-100"><div class="panel-head"><h2>Most regular members</h2></div>
+    {% for t in top %}<div class="d-flex justify-content-between py-2 border-bottom"><span>{{ t.member__name }} <small class="text-secondary">{{ t.member__member_id }}</small></span><strong>{{ t.visits }} visits</strong></div>
+    {% empty %}<div class="empty">No attendance this month.</div>{% endfor %}
+    <div class="panel-head mt-4"><h2>Active members by plan</h2></div>
+    {% for p in plan_mix %}<div class="d-flex justify-content-between py-1"><span>{{ p.plan__name|default:"No plan" }}</span><strong>{{ p.n }}</strong></div>{% endfor %}
+  </div></div>
+</div>
+<div class="mt-3 d-flex gap-2 no-print"><a class="btn btn-ghost" href="{% url 'gym:export_payments' %}"><i class="bi bi-download"></i> All payments (CSV)</a>
+  <a class="btn btn-ghost" href="{% url 'gym:export_members' %}"><i class="bi bi-download"></i> All members (CSV)</a></div>
+{{ charts|json_script:"chart-data" }}
+{% endblock %}
+{% block scripts %}
+<script>
+  const charts = JSON.parse(document.getElementById("chart-data").textContent);
+  drawChart("yearChart", charts.year_rev, "bar", "#5b4dff");
+  drawChart("dayChart", charts.daily_att, "line", "#0f9d8a");
+</script>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "gym/base.html" %}
+{% block title %}Delete member{% endblock %}
+{% block content %}
+<div class="panel" style="max-width:560px">
+  <h1>Delete {{ member.name }}?</h1>
+  <p class="mt-2">This permanently removes the member with their payments and attendance. To keep the history, set the status to <strong>Left</strong> instead.</p>
+  <form method="post" class="d-flex gap-2">{% csrf_token %}
+    <button class="btn btn-danger" type="submit">Delete member</button>
+    <a class="btn btn-ghost" href="{% url 'gym:member_detail' member.pk %}">Keep member</a>
+  </form>
+</div>
+{% endblock %}

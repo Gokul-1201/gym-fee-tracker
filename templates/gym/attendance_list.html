@@ -1,0 +1,28 @@
+{% extends "gym/base.html" %}
+{% block title %}Attendance{% endblock %}
+{% block content %}
+<div class="topbar">
+  <div><h1>Attendance</h1><p>{{ day|date:"l, d F Y" }} · {{ records|length }} visit{{ records|length|pluralize }}</p></div>
+  <a class="btn btn-accent" href="{% url 'gym:scan' %}"><i class="bi bi-qr-code-scan"></i> Open QR check-in</a>
+</div>
+<div class="row g-3">
+  <div class="col-lg-8"><div class="panel">
+    <form class="d-flex gap-2 mb-3" method="get"><input class="form-control" style="max-width:200px" type="date" name="date" value="{{ day|date:'Y-m-d' }}" aria-label="Date">
+      <button class="btn btn-ghost" type="submit">Show day</button></form>
+    <div class="scroll-x"><table class="table-x">
+      <thead><tr><th>Member</th><th>Time</th><th>How</th><th>Fee</th></tr></thead>
+      <tbody>{% for a in records %}
+        <tr><td><a class="who" href="{% url 'gym:member_detail' a.member.pk %}"><span class="avatar">{{ a.member.initials }}</span><span><strong>{{ a.member.name }}</strong><small>{{ a.member.member_id }}</small></span></a></td>
+          <td>{{ a.check_in|time:"h:i A" }}</td><td>{{ a.get_method_display }}</td>
+          <td><span class="badge-x badge-{{ a.member.fee_class }}">{{ a.member.fee_label }}</span></td></tr>
+      {% empty %}<tr><td colspan="4" class="empty">No check-ins on this day.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div></div>
+  <div class="col-lg-4"><form method="post" class="panel">{% csrf_token %}
+    <div class="panel-head"><h2>Mark present at the desk</h2></div>
+    <p class="small text-secondary">Use this when a member forgot their phone or QR code.</p>
+    {{ form.member }}
+    <button class="btn btn-accent mt-3 w-100" type="submit">Check in member</button>
+  </form></div>
+</div>
+{% endblock %}

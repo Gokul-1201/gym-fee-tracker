@@ -1,0 +1,25 @@
+{% extends "gym/base.html" %}
+{% block title %}Receipt {{ payment.receipt_no }}{% endblock %}
+{% block content %}
+<div class="topbar no-print"><div><h1>Receipt</h1></div>
+  <div class="d-flex gap-2"><a class="btn btn-ghost" href="{% url 'gym:member_detail' payment.member.pk %}">Back to member</a>
+  <button class="btn btn-accent" onclick="window.print()"><i class="bi bi-printer"></i> Print</button></div></div>
+<div class="panel receipt-sheet">
+  <div class="d-flex justify-content-between align-items-start">
+    <div><div class="display fs-1 fst-italic fw-bold" style="line-height:1">{{ GYM_NAME }}<span style="color:var(--accent)">.</span></div><small class="text-secondary">Gym membership receipt</small></div>
+    <div class="text-end"><strong>{{ payment.receipt_no }}</strong><br><small class="text-secondary">{{ payment.paid_on|date:"d M Y" }}</small></div>
+  </div>
+  <hr>
+  <dl class="kv">
+    <dt>Received from</dt><dd>{{ payment.member.name }} ({{ payment.member.member_id }})</dd>
+    <dt>Plan</dt><dd>{{ payment.member.plan.name|default:"—" }} × {{ payment.periods }}</dd>
+    <dt>Covers</dt><dd>{{ payment.period_start|date:"d M Y" }} to {{ payment.period_end|date:"d M Y" }}</dd>
+    <dt>Method</dt><dd>{{ payment.get_method_display }}</dd>
+    {% if payment.note %}<dt>Note</dt><dd>{{ payment.note }}</dd>{% endif %}
+  </dl>
+  <hr>
+  <div class="d-flex justify-content-between align-items-center"><span class="fs-5">Amount paid</span>
+    <span class="display fs-1 fw-bold">{{ CURRENCY }}{{ payment.amount|floatformat:"2" }}</span></div>
+  <p class="text-secondary small mt-3 mb-0">Thank you for training with us.</p>
+</div>
+{% endblock %}

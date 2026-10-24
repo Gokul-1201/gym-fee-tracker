@@ -1,0 +1,17 @@
+{% extends "gym/base.html" %}
+{% block title %}Dues{% endblock %}
+{% block content %}
+<div class="topbar">
+  <div><h1>Fees due</h1><p>Reminders go out on: <strong>{{ channels }}</strong></p></div>
+  <form method="post" action="{% url 'gym:send_all_reminders' %}">{% csrf_token %}
+    <button class="btn btn-accent" type="submit"><i class="bi bi-send"></i> Send reminders now</button></form>
+</div>
+<div class="panel mb-3">
+  <div class="panel-head"><h2>Overdue <span class="badge-x badge-danger">{{ overdue|length }}</span></h2></div>
+  {% include "gym/_due_table.html" with rows=overdue %}
+</div>
+<div class="panel">
+  <div class="panel-head"><h2>Due in the next few days <span class="badge-x badge-warn">{{ due_soon|length }}</span></h2></div>
+  {% include "gym/_due_table.html" with rows=due_soon %}
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "gym/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="topbar">
+  <div><h1>{{ GYM_NAME }} desk</h1><p>{{ TODAY|date:"l, d F Y" }} — here is how the gym stands today.</p></div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-ghost" href="{% url 'gym:scan' %}"><i class="bi bi-qr-code-scan"></i> QR check-in</a>
+    <a class="btn btn-ghost" href="{% url 'gym:member_create' %}"><i class="bi bi-person-plus"></i> New member</a>
+    <a class="btn btn-accent" href="{% url 'gym:payment_create' %}"><i class="bi bi-plus-lg"></i> Record payment</a>
+  </div>
+</div>
+
+<section class="band mb-4" aria-label="Key numbers">
+  <div><div class="num">{{ stats.active }}</div><div class="lbl">Active members of {{ stats.members }}</div></div>
+  <div><div class="num">{{ CURRENCY }}{{ stats.collected|floatformat:"0" }}</div><div class="lbl">Collected this month</div></div>
+  <div><div class="num {% if stats.overdue %}bad{% endif %}">{{ stats.overdue }}</div><div class="lbl">Overdue · {{ CURRENCY }}{{ stats.pending|floatformat:"0" }} pending</div></div>
+  <div><div class="num">{{ stats.today_checkins }}</div><div class="lbl">Check-ins today</div></div>
+</section>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-6"><div class="panel h-100"><div class="panel-head"><h2>Revenue, last 6 months</h2></div><div class="chart-box"><canvas id="revChart"></canvas></div></div></div>
+  <div class="col-lg-6"><div class="panel h-100"><div class="panel-head"><h2>Visits, last 14 days</h2></div><div class="chart-box"><canvas id="attChart"></canvas></div></div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="panel h-100">
+      <div class="panel-head"><h2>Overdue fees</h2><a href="{% url 'gym:dues' %}" class="small">See all dues</a></div>
+      {% for m in overdue_list %}
+      <div class="d-flex align-items-center justify-content-between py-2 border-bottom">
+        <a class="who" href="{% url 'gym:member_detail' m.pk %}"><span class="avatar">{{ m.initials }}</span><span><strong>{{ m.name }}</strong><small>{{ m.plan.name|default:"No plan" }} · due {{ m.next_due_date|date:"d M" }}</small></span></a>
+        <span class="badge-x badge-danger">{{ m.fee_label }}</span>
+      </div>
+      {% empty %}<div class="empty">No overdue fees. Everyone is paid up.</div>{% endfor %}
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="panel h-100">
+      <div class="panel-head"><h2>Due soon</h2></div>
+      {% for m in due_soon %}
+      <div class="d-flex align-items-center justify-content-between py-2 border-bottom">
+        <a class="who" href="{% url 'gym:member_detail' m.pk %}"><span class="avatar">{{ m.initials }}</span><span><strong>{{ m.name }}</strong><small>{{ m.plan.name|default:"No plan" }} · {{ m.next_due_date|date:"d M" }}</small></span></a>
+        <a class="btn btn-sm btn-ghost" href="{% url 'gym:payment_create' %}?member={{ m.pk }}">Collect</a>
+      </div>
+      {% empty %}<div class="empty">Nothing falls due in the next few days.</div>{% endfor %}
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="panel h-100">
+      <div class="panel-head"><h2>Recent payments</h2><a href="{% url 'gym:payment_list' %}" class="small">All payments</a></div>
+      {% for p in recent_payments %}
+      <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+        <div><strong>{{ p.member.name }}</strong><br><small class="text-secondary">{{ p.paid_on|date:"d M" }} · {{ p.get_method_display }}</small></div>
+        <a class="money text-decoration-none" href="{% url 'gym:receipt' p.pk %}">{{ CURRENCY }}{{ p.amount|floatformat:"0" }}</a>
+      </div>
+      {% empty %}<div class="empty">No payments recorded yet.</div>{% endfor %}
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="panel h-100">
+      <div class="panel-head"><h2>Checked in today</h2><a href="{% url 'gym:attendance' %}" class="small">Attendance</a></div>
+      {% for a in todays_checkins %}
+      <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+        <strong>{{ a.member.name }}</strong><small class="text-secondary">{{ a.check_in|time:"h:i A" }} · {{ a.get_method_display }}</small>
+      </div>
+      {% empty %}<div class="empty">No one has checked in yet today.</div>{% endfor %}
+    </div>
+  </div>
+</div>
+{{ charts|json_script:"chart-data" }}
+{% endblock %}
+{% block scripts %}
+<script>
+  const charts = JSON.parse(document.getElementById("chart-data").textContent);
+  drawChart("revChart", charts.revenue, "bar", "#5b4dff");
+  drawChart("attChart", charts.attendance, "line", "#0f9d8a");
+</script>
+{% endblock %}

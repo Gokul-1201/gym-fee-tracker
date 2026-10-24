@@ -1,0 +1,36 @@
+{% extends "gym/base.html" %}
+{% block title %}Record payment{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>Record a payment</h1><p>The member's next due date moves forward automatically.</p></div></div>
+<form method="post" class="panel" style="max-width:760px">{% csrf_token %}
+  {{ form.non_field_errors }}
+  <div class="row g-3">
+    {% for field in form %}
+    <div class="col-md-{% if field.name == 'member' or field.name == 'note' %}12{% else %}6{% endif %}">
+      <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}
+      {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+      {% for e in field.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+  <div class="d-flex gap-2 mt-4">
+    <button class="btn btn-accent px-4" type="submit">Save payment</button>
+    <a class="btn btn-ghost" href="{% url 'gym:payment_list' %}">Cancel</a>
+  </div>
+</form>
+{{ plan_prices|json_script:"plan-prices" }}
+{% endblock %}
+{% block scripts %}
+<script>
+  const prices = JSON.parse(document.getElementById("plan-prices").textContent);
+  const member = document.getElementById("id_member"), periods = document.getElementById("id_periods"), amount = document.getElementById("id_amount");
+  let touched = !!amount.value;
+  amount.addEventListener("input", () => touched = true);
+  function fill() {
+    const p = prices[member.value];
+    if (p && (!touched || !amount.value)) amount.value = (p * (parseInt(periods.value) || 1)).toFixed(2);
+  }
+  member.addEventListener("change", () => { touched = false; fill(); });
+  periods.addEventListener("input", () => { touched = false; fill(); });
+</script>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "gym/base.html" %}
+{% block title %}Plans{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>Membership plans</h1><p>Monthly and annual fees that members can be placed on.</p></div></div>
+<div class="row g-3">
+  <div class="col-lg-7"><div class="panel"><div class="scroll-x"><table class="table-x">
+    <thead><tr><th>Plan</th><th>Cycle</th><th>Fee</th><th>Members</th><th></th></tr></thead>
+    <tbody>{% for p in plans %}
+      <tr><td><strong>{{ p.name }}</strong><br><small class="text-secondary">{{ p.description }}</small></td>
+        <td>{{ p.get_billing_cycle_display }}</td><td class="money">{{ CURRENCY }}{{ p.price|floatformat:"0" }}</td>
+        <td>{{ p.member_count }}</td>
+        <td class="text-end">{% if not p.is_active %}<span class="badge-x badge-muted me-2">Hidden</span>{% endif %}<a class="btn btn-sm btn-ghost" href="?edit={{ p.pk }}">Edit</a></td></tr>
+    {% empty %}<tr><td colspan="5" class="empty">No plans yet. Add one to start registering members.</td></tr>{% endfor %}</tbody>
+  </table></div></div></div>
+  <div class="col-lg-5"><form method="post" class="panel">{% csrf_token %}
+    <div class="panel-head"><h2>{% if editing %}Edit {{ editing.name }}{% else %}Add a plan{% endif %}</h2></div>
+    {% for field in form %}
+      <div class="mb-3"><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}
+      {% for e in field.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+    {% endfor %}
+    <button class="btn btn-accent" type="submit">Save plan</button>
+    {% if editing %}<a class="btn btn-ghost" href="{% url 'gym:plan_list' %}">Cancel</a>{% endif %}
+  </form></div>
+</div>
+{% endblock %}

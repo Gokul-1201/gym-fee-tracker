@@ -1,0 +1,11 @@
+<div class="scroll-x"><table class="table-x">
+  <thead><tr><th>Member</th><th>Phone</th><th>Plan</th><th>Due date</th><th>Status</th><th></th></tr></thead>
+  <tbody>{% for m in rows %}
+    <tr><td><a class="who" href="{% url 'gym:member_detail' m.pk %}"><span class="avatar">{{ m.initials }}</span><span><strong>{{ m.name }}</strong><small>{{ m.member_id }}</small></span></a></td>
+      <td>{{ m.phone }}</td><td>{{ m.plan.name|default:"—" }}{% if m.plan %} · {{ CURRENCY }}{{ m.plan.price|floatformat:"0" }}{% endif %}</td>
+      <td>{{ m.next_due_date|date:"d M Y" }}</td><td><span class="badge-x badge-{{ m.fee_class }}">{{ m.fee_label }}</span></td>
+      <td class="text-end"><div class="d-flex gap-2 justify-content-end">
+        <form method="post" action="{% url 'gym:send_reminder' m.pk %}">{% csrf_token %}<button class="btn btn-sm btn-ghost" type="submit"><i class="bi bi-chat-dots"></i> Remind</button></form>
+        <a class="btn btn-sm btn-accent" href="{% url 'gym:payment_create' %}?member={{ m.pk }}">Collect</a></div></td></tr>
+  {% empty %}<tr><td colspan="6" class="empty">Nobody here. Nice.</td></tr>{% endfor %}</tbody>
+</table></div>
